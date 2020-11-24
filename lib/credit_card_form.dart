@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_credit_card/flutter_credit_card.dart';
 
 import 'credit_card_model.dart';
+import 'flutter_credit_card.dart';
 
 class CreditCardForm extends StatefulWidget {
   const CreditCardForm({
@@ -11,20 +12,29 @@ class CreditCardForm extends StatefulWidget {
     this.expiryDate,
     this.cardHolderName,
     this.cvvCode,
+    this.phoneNumber,
     @required this.onCreditCardModelChange,
     this.themeColor,
     this.textColor = Colors.black,
     this.cursorColor,
-  }) : super(key: key);
+    this.showHolderName = true,
+    this.showPhoneNumber = true,
+    this.localizedText = const LocalizedText(),
+  })  : assert(localizedText != null),
+        super(key: key);
 
   final String cardNumber;
   final String expiryDate;
   final String cardHolderName;
   final String cvvCode;
+  final String phoneNumber;
+  final bool showHolderName;
+  final bool showPhoneNumber;
   final void Function(CreditCardModel) onCreditCardModelChange;
   final Color themeColor;
   final Color textColor;
   final Color cursorColor;
+  final LocalizedText localizedText;
 
   @override
   _CreditCardFormState createState() => _CreditCardFormState();
@@ -35,6 +45,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
   String expiryDate;
   String cardHolderName;
   String cvvCode;
+  String phoneNumber;
   bool isCvvFocused = false;
   Color themeColor;
 
@@ -49,6 +60,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
       TextEditingController();
   final TextEditingController _cvvCodeController =
       MaskedTextController(mask: '0000');
+  final TextEditingController _phoneNumberController = TextEditingController();
 
   FocusNode cvvFocusNode = FocusNode();
 
@@ -62,9 +74,10 @@ class _CreditCardFormState extends State<CreditCardForm> {
     expiryDate = widget.expiryDate ?? '';
     cardHolderName = widget.cardHolderName ?? '';
     cvvCode = widget.cvvCode ?? '';
+    phoneNumber = widget.phoneNumber ?? '';
 
-    creditCardModel = CreditCardModel(
-        cardNumber, expiryDate, cardHolderName, cvvCode, isCvvFocused);
+    creditCardModel = CreditCardModel(cardNumber, expiryDate, cardHolderName,
+        cvvCode, isCvvFocused, phoneNumber);
   }
 
   @override
@@ -108,6 +121,14 @@ class _CreditCardFormState extends State<CreditCardForm> {
         onCreditCardModelChange(creditCardModel);
       });
     });
+
+    _phoneNumberController.addListener(() {
+      setState(() {
+        phoneNumber = _phoneNumberController.text;
+        creditCardModel.phoneNumber = phoneNumber;
+        onCreditCardModelChange(creditCardModel);
+      });
+    });
   }
 
   @override
@@ -136,9 +157,9 @@ class _CreditCardFormState extends State<CreditCardForm> {
                   color: widget.textColor,
                 ),
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Card number',
-                  hintText: 'xxxx xxxx xxxx xxxx',
+                  border: const OutlineInputBorder(),
+                  labelText: widget.localizedText.cardNumberLabel,
+                  hintText: widget.localizedText.cardNumberHint,
                 ),
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
@@ -154,9 +175,10 @@ class _CreditCardFormState extends State<CreditCardForm> {
                   color: widget.textColor,
                 ),
                 decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Expired Date',
-                    hintText: 'MM/YY'),
+                  border: const OutlineInputBorder(),
+                  labelText: widget.localizedText.expiryDateLabel,
+                  hintText: widget.localizedText.expiryDateHint,
+                ),
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.next,
               ),
@@ -172,9 +194,9 @@ class _CreditCardFormState extends State<CreditCardForm> {
                   color: widget.textColor,
                 ),
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'CVV',
-                  hintText: 'XXXX',
+                  border: const OutlineInputBorder(),
+                  labelText: widget.localizedText.cvvLabel,
+                  hintText: widget.localizedText.cvvHint,
                 ),
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
@@ -185,23 +207,46 @@ class _CreditCardFormState extends State<CreditCardForm> {
                 },
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
-              child: TextFormField(
-                controller: _cardHolderNameController,
-                cursorColor: widget.cursorColor ?? themeColor,
-                style: TextStyle(
-                  color: widget.textColor,
-                ),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Card Holder',
-                ),
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.next,
-              ),
-            ),
+            (widget.showHolderName)
+                ? Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
+                    child: TextFormField(
+                      controller: _cardHolderNameController,
+                      cursorColor: widget.cursorColor ?? themeColor,
+                      style: TextStyle(
+                        color: widget.textColor,
+                      ),
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: widget.localizedText.cardHolderLabel,
+                        hintText: widget.localizedText.cardHolderHint,
+                      ),
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  )
+                : Container(),
+            (widget.showPhoneNumber)
+                ? Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
+                    child: TextFormField(
+                      controller: _phoneNumberController,
+                      cursorColor: widget.cursorColor ?? themeColor,
+                      style: TextStyle(
+                        color: widget.textColor,
+                      ),
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        labelText: widget.localizedText.phoneNumberLabel,
+                        hintText: widget.localizedText.phoneNumberHint,
+                      ),
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  )
+                : Container()
           ],
         ),
       ),
